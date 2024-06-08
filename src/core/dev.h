@@ -1,10 +1,11 @@
-#ifndef ABILITY_H
-#define ABILITY_H
+#ifndef __DEV_H__
+#define __DEV_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #define MAX_ABILITY_NAME_LENGTH 128
+#define MAX_DEVICE_NAME_LENGTH 128
 
 enum ability_type {
     ABILITY_TYPE_NONE,
@@ -48,3 +49,20 @@ struct ability_ctrl_block {
     struct ability* tail;
     uint16_t count;
 };
+
+struct device {
+    struct device *next;
+    struct device *prev;
+
+    uint16_t id;
+    char name[MAX_ABILITY_NAME_LENGTH];
+    struct ability_ctrl_block abilities;
+};
+
+struct device_ctrl_block {
+    struct device* head;
+    struct device* tail;
+    uint16_t count;
+};
+
+#endif /* __DEV_H__ */

@@ -267,6 +267,50 @@ int msg_queue_add(struct msg_queue *q, struct msg_buff *msgb)
     return DATA_ERR_OK;
 }
 
+int msg_raw_queue_del(struct msg_raw_queue *q, struct msg_raw_buff *msgb_raw)
+{
+    if (q == NULL || msgb_raw == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    if (q->count == 0)
+        return -DATA_ERR_QUEUE_IS_EMPTY;
+        
+    if (q->head == q->tail) {
+        memcpy(msgb_raw, q->head, sizeof(struct msg_raw_buff));
+        q->head = NULL;
+        q->tail = NULL;
+    } else {
+        q->head = q->head->next;
+        q->head->prev = NULL;
+    }
+
+    q->count--;
+
+    return DATA_ERR_OK;
+}
+
+int msg_raw_queue_add(struct msg_raw_queue *q, struct msg_raw_buff *msgb_raw)
+{
+    if (q == NULL || msgb_raw == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    if (q->count >= q->size)
+        return -DATA_ERR_QUEUE_IS_FULL;
+
+    if (q->head == NULL) {
+        q->head = msgb_raw;
+        q->tail = msgb_raw;
+    } else {
+        q->tail->next = msgb_raw;
+        msgb_raw->prev = q->tail;
+        q->tail = msgb_raw;
+    }
+
+    q->count++;
+
+    return DATA_ERR_OK;
+}
+
 int msg_rxq_select(struct msg_rx_srvs *rx_srvs, struct msg_buff *msgb)
 {
     int i;
@@ -297,6 +341,27 @@ int msg_txq_select(struct msg_tx_srvs *tx_srvs, struct msg_buff *msgb)
     }
 }
 
+int msg_rxq_raw_select(struct msg_rx_raw_srvs *rx_raw_srvs, struct msg_raw_buff *msgb_raw)
+{
+    int i;
+    int ret;
+    struct msg_header *msg_hdr;
+    if (rx_raw_srvs == NULL || msgb_raw == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    ret = msg_header_load(msg_hdr, msgb_raw->data);
+    if (ret != DATA_ERR_OK)
+        return ret;
+
+    for (i = 0; i < rx_raw_srvs->size; i++) {
+        if (rx_raw_srvs->srvs[i].id == msg_hdr->priority) {   
+            return i;
+        }
+    }
+
+    return -DATA_ERR_QUEUE_NO_MATCH;
+}
+
 int msg_rxq_init(struct msg_rx_srv *rx_srv)
 {
     if (rx_srv == NULL)
@@ -314,13 +379,13 @@ int msg_rxq_init(struct msg_rx_srv *rx_srv)
     return DATA_ERR_OK;
 }
 
-int msg_rx_srv_init(struct msg_rx_srv *rx_srv, uint32_t msg_id)
+int msg_rx_srv_init(struct msg_rx_srv *rx_srv, uint32_t srv_id)
 {
     int ret;
     if (rx_srv == NULL)
         return -DATA_ERR_PARAMETER;
 
-    rx_srv->id = msg_id;
+    rx_srv->id = srv_id;
     rx_srv->type = MSG_Q_IDLE;
 
     ret = msg_rxq_init(rx_srv);
@@ -366,7 +431,7 @@ int msg_txq_init(struct msg_tx_srv *tx_srv)
     return DATA_ERR_OK;
 }
 
-int msg_tx_srv_init(struct msg_tx_srv *tx_srv, uint32_t msg_id)
+int msg_tx_srv_init(struct msg_tx_srv *tx_srv, uint32_t srv_id)
 {
     int ret;
     if (tx_srv == NULL)
@@ -376,7 +441,7 @@ int msg_tx_srv_init(struct msg_tx_srv *tx_srv, uint32_t msg_id)
     if (ret != DATA_ERR_OK)
         return ret;
 
-    tx_srv->id = msg_id;
+    tx_srv->id = srv_id;
     tx_srv->type = MSG_Q_IDLE;
 
     return DATA_ERR_OK;
@@ -396,6 +461,61 @@ int msg_tx_srvs_init(struct data_ctrl_block *dcb)
 
     for (i = 0; i < MSG_TXQ_CNT; i++) {
         ret = msg_tx_srv_init(&dcb->tx_srvs->srvs[i], i);
+        if (ret != DATA_ERR_OK) {
+            return ret;
+        }
+    }
+
+    return DATA_ERR_OK;
+}
+
+int msg_rxq_raw_init(struct msg_rx_raw_srv *rx_raw_srv)
+{
+    if (rx_raw_srv == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    rx_raw_srv->q = (struct msg_raw_queue *)malloc(sizeof(struct msg_raw_queue));
+    if (rx_raw_srv->q == NULL)
+        return -DATA_ERR_NO_MEMORY;
+
+    rx_raw_srv->q->head = NULL;
+    rx_raw_srv->q->tail = NULL;
+    rx_raw_srv->q->size = MSG_RXQ_RAW_SIZE;
+    rx_raw_srv->q->count = 0;
+
+    return DATA_ERR_OK;
+}
+
+int msg_rx_raw_srv_init(struct msg_rx_raw_srv *rx_raw_srv, uint32_t srv_id)
+{
+    int ret;
+    if (rx_raw_srv == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    ret = msg_rxq_raw_init(rx_raw_srv);
+    if (ret != DATA_ERR_OK)
+        return ret;
+
+    rx_raw_srv->id = srv_id;
+    rx_raw_srv->type = MSG_Q_IDLE;
+
+    return DATA_ERR_OK;
+}
+
+int msg_rx_raw_srvs_init(struct data_ctrl_block *dcb)
+{
+    int i;
+    int ret;
+    dcb->rx_raw_srvs = (struct msg_rx_raw_srvs *)malloc(sizeof(struct msg_rx_raw_srvs));
+    if (dcb->rx_raw_srvs == NULL) {
+        return -DATA_ERR_NO_MEMORY;
+    }
+    memset(dcb->rx_raw_srvs, 0, sizeof(struct msg_rx_raw_srv));
+
+    dcb->rx_raw_srvs->size = MSG_RXQ_RAW_CNT;
+
+    for (i = 0; i < MSG_RXQ_RAW_CNT; i++) {
+        ret = msg_rx_raw_srv_init(&dcb->rx_raw_srvs->srvs[i], i);
         if (ret != DATA_ERR_OK) {
             return ret;
         }
@@ -462,6 +582,25 @@ void msg_tx_srvs_deinit(struct data_ctrl_block *dcb)
     }
 
     free(dcb->tx_srvs);
+}
+
+void msg_rxq_raw_deinit(struct msg_rx_raw_srv *rx_raw_srv)
+{
+    free(rx_raw_srv->q);
+}
+
+void msg_rx_raw_srv_deinit(struct msg_rx_raw_srv *rx_raw_srv)
+{
+    msg_rxq_raw_deinit(rx_raw_srv);
+}
+
+void msg_rx_raw_srvs_deinit(struct data_ctrl_block *dcb)
+{
+    for (int i = 0; i < MSG_RXQ_RAW_CNT; i++) {
+        msg_rxq_raw_deinit(&dcb->rx_raw_srvs->srvs[i]);
+    }
+
+    free(dcb->rx_raw_srvs);
 }
 
 void data_deinit(struct data_ctrl_block *dcb)
