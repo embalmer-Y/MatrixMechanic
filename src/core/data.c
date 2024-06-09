@@ -559,7 +559,7 @@ void msg_rx_srv_deinit(struct msg_rx_srv *rx_srv)
 void msg_rx_srvs_deinit(struct data_ctrl_block *dcb)
 {
     for (int i = 0; i < MSG_RXQ_CNT; i++) {
-        msg_rxq_deinit(&dcb->rx_srvs->srvs[i]);
+        msg_rx_srv_deinit(&dcb->rx_srvs->srvs[i]);
     }
 
     free(dcb->rx_srvs);
@@ -578,7 +578,7 @@ void msg_tx_srv_deinit(struct msg_tx_srv *tx_srv)
 void msg_tx_srvs_deinit(struct data_ctrl_block *dcb)
 {
     for (int i = 0; i < MSG_TXQ_CNT; i++) {
-        msg_txq_deinit(&dcb->tx_srvs->srvs[i]);
+        msg_tx_srv_deinit(&dcb->tx_srvs->srvs[i]);
     }
 
     free(dcb->tx_srvs);
@@ -597,7 +597,7 @@ void msg_rx_raw_srv_deinit(struct msg_rx_raw_srv *rx_raw_srv)
 void msg_rx_raw_srvs_deinit(struct data_ctrl_block *dcb)
 {
     for (int i = 0; i < MSG_RXQ_RAW_CNT; i++) {
-        msg_rxq_raw_deinit(&dcb->rx_raw_srvs->srvs[i]);
+        msg_rx_raw_srv_deinit(&dcb->rx_raw_srvs->srvs[i]);
     }
 
     free(dcb->rx_raw_srvs);

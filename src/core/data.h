@@ -118,7 +118,7 @@ struct msg_rx_raw_srv {
 
 struct msg_rx_raw_srvs {
     uint8_t size;
-    struct msg_rx_srv srvs[MSG_RXQ_RAW_CNT];
+    struct msg_rx_raw_srv srvs[MSG_RXQ_RAW_CNT];
 };
 
 struct data_ctrl_block {
