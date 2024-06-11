@@ -30,6 +30,29 @@ struct ability_ops {
     int (*callback)(int argc, void *argv[]);
 };
 
+struct ability_route_ability_node {
+    struct ability_route_ability_node *next;
+    struct ability_route_ability_node *prev;
+
+    uint16_t ability_id;
+};
+
+struct ability_route_dev_node {
+    struct ability_route_dev_node *next;
+    struct ability_route_dev_node *prev;
+
+    uint16_t dev_id;
+    struct ability_route_ability_node *head;
+    struct ability_route_ability_node *tail;
+};
+
+struct ability_route {
+    uint32_t dev_num;
+    uint32_t ability_num;
+    struct ability_route_dev_node *head;
+    struct ability_route_dev_node *tail;
+};
+
 struct ability {
     struct ability *next;
     struct ability *prev;
@@ -40,6 +63,7 @@ struct ability {
     char *desc;
     enum ability_type type;
     enum ability_state state;
+    struct ability_route route;
 
     struct ability_ops ops;
 };
