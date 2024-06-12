@@ -7,9 +7,11 @@
 #define MSG_RXQ_SIZE 1024
 #define MSG_TXQ_SIZE 1024
 #define MSG_RXQ_RAW_SIZE 1024
+#define MSG_TXQ_RAW_SIZE 1024
 #define MSG_RXQ_CNT  5
 #define MSG_TXQ_CNT  2
 #define MSG_RXQ_RAW_CNT 2
+#define MSG_TXQ_RAW_CNT 2
 
 enum data_errno {
     DATA_ERR_OK,
@@ -121,10 +123,22 @@ struct msg_rx_raw_srvs {
     struct msg_rx_raw_srv srvs[MSG_RXQ_RAW_CNT];
 };
 
+struct msg_tx_raw_srv {
+    struct msg_raw_queue *q;
+    uint32_t id;
+    enum msg_q_type type;
+};
+
+struct msg_tx_raw_srvs {
+    uint8_t size;
+    struct msg_tx_raw_srv srvs[MSG_TXQ_CNT];
+};
+
 struct data_ctrl_block {
     struct msg_tx_srvs *tx_srvs;
     struct msg_rx_srvs *rx_srvs;
     struct msg_rx_raw_srvs *rx_raw_srvs;
+    struct msg_tx_raw_srvs *tx_raw_srvs;
 };
 
 

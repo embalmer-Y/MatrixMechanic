@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "data.h"
+
 #define MAX_ABILITY_NAME_LENGTH 128
 #define MAX_DEVICE_NAME_LENGTH 128
 
@@ -72,6 +74,7 @@ struct ability_ctrl_block {
     struct ability* head;
     struct ability* tail;
     uint16_t count;
+    struct data_ctrl_block data;
 };
 
 struct device {
