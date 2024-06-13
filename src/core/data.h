@@ -139,6 +139,12 @@ struct data_ctrl_block {
     struct msg_rx_srvs *rx_srvs;
     struct msg_rx_raw_srvs *rx_raw_srvs;
     struct msg_tx_raw_srvs *tx_raw_srvs;
+    struct {
+        uint8_t rx_en: 1;
+        uint8_t tx_en: 1;
+        uint8_t rx_raw_en: 1;
+        uint8_t tx_raw_en: 1;
+    };
 };
 
 

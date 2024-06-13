@@ -3,6 +3,7 @@
 #include "string.h"
 
 #include "data.h"
+#include "common.h"
 #include "msg_checksum.h"
 
 int msg_block_dump(struct msg_block *msg_blk, uint8_t *data)
@@ -602,16 +603,45 @@ int msg_tx_raw_srvs_init(struct data_ctrl_block *dcb)
 int data_init(struct data_ctrl_block *dcb)
 {
     int ret;
+    if (dcb == NULL)
+        return -DATA_ERR_PARAMETER;
 
-    ret = msg_rx_srvs_init(dcb);
-    if (ret != DATA_ERR_OK) {
-        return ret;
+    if (dcb->rx_en) {
+        ret = msg_rx_srvs_init(dcb);
+        if (ret != DATA_ERR_OK)
+            return ret;
     }
 
-    ret = msg_tx_srvs_init(dcb);
-    if (ret != DATA_ERR_OK) {
-        return ret;
+    if (dcb->tx_en) {
+        ret = msg_tx_srvs_init(dcb);
+        if (ret != DATA_ERR_OK)
+            return ret;
     }
+    
+    if (dcb->rx_raw_en) {
+        ret = msg_rx_raw_srvs_init(dcb);
+        if (ret != DATA_ERR_OK)
+            return ret;
+    }
+
+    if (dcb->tx_raw_en) {
+    ret = msg_tx_raw_srvs_init(dcb);
+        if (ret != DATA_ERR_OK)
+            return ret;
+    }
+
+    return DATA_ERR_OK;
+}
+
+int data_set_mask(struct data_ctrl_block *dcb, uint8_t mask)
+{
+    if (dcb == NULL)
+        return -DATA_ERR_PARAMETER;
+
+    dcb->rx_en = GET_BIT(mask, 0) ? 1 : 0;
+    dcb->tx_en = GET_BIT(mask, 1) ? 1 : 0;
+    dcb->rx_raw_en = GET_BIT(mask, 2) ? 1 : 0;
+    dcb->tx_raw_en = GET_BIT(mask, 3) ? 1 : 0;
 
     return DATA_ERR_OK;
 }

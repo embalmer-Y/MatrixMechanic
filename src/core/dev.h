@@ -74,7 +74,7 @@ struct ability_ctrl_block {
     struct ability* head;
     struct ability* tail;
     uint16_t count;
-    struct data_ctrl_block data;
+    struct data_ctrl_block *data;
 };
 
 struct device {
@@ -83,7 +83,7 @@ struct device {
 
     uint16_t id;
     char name[MAX_ABILITY_NAME_LENGTH];
-    struct ability_ctrl_block abilities;
+    struct ability_ctrl_block *abilities;
 };
 
 struct device_ctrl_block {
