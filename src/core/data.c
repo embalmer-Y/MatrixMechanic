@@ -729,10 +729,21 @@ void msg_tx_raw_srvs_deinit(struct data_ctrl_block *dcb)
 
 void data_deinit(struct data_ctrl_block *dcb)
 {
-    msg_rx_srvs_deinit(dcb);
-    msg_tx_srvs_deinit(dcb);
-    msg_rx_raw_srvs_deinit(dcb);
-    msg_tx_raw_srvs_deinit(dcb);
+    if (dcb->rx_en) {
+        msg_rx_srvs_deinit(dcb);
+    }
+
+    if (dcb->tx_en) {
+        msg_tx_srvs_deinit(dcb);
+    }
+
+    if (dcb->rx_raw_en) {
+        msg_rx_raw_srvs_deinit(dcb);
+    }
+
+    if (dcb->tx_raw_en) {
+        msg_tx_raw_srvs_deinit(dcb);
+    }
 }
 
 void data_free(struct data_ctrl_block *dcb)
