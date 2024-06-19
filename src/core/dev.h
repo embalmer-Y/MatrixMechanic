@@ -105,7 +105,7 @@ struct device {
 
     uint16_t id;
     char name[MAX_ABILITY_NAME_LENGTH];
-    struct ability_ctrl_block *abilities;
+    struct ability_ctrl_block *acb;
 };
 
 struct device_ctrl_block {

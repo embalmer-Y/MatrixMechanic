@@ -4,7 +4,41 @@
 #include "dev.h"
 #include "common.h"
 
-int dev_init(struct device_ctrl_block *dcb)
+int ability_acb_init(struct ability_ctrl_block *acb)
+{
+    if (acb == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    acb->count = 0;
+
+    // TODO: Initialize ability
+
+    return 0;
+}
+
+int ability_acb_deinit(struct ability_ctrl_block *acb)
+{
+    if (acb == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    // TODO: Deinitialize ability
+
+    return 0;
+}
+
+struct ability_ctrl_block *acb_alloc(void)
+{
+    return(struct ability_ctrl_block *)malloc(sizeof(struct ability_ctrl_block));
+}
+
+void acb_free(struct ability_ctrl_block *acb)
+{
+    free(acb);
+}
+
+int device_dcb_init(struct device_ctrl_block *dcb)
 {
     if (dcb == NULL) {
         return -DEVICE_ERR_PARAMETER;
@@ -17,7 +51,7 @@ int dev_init(struct device_ctrl_block *dcb)
     return 0;
 }
 
-int dev_deinit(struct device_ctrl_block *dcb)
+int device_dcb_deinit(struct device_ctrl_block *dcb)
 {
     if (dcb == NULL) {
         return -DEVICE_ERR_PARAMETER;
@@ -28,12 +62,12 @@ int dev_deinit(struct device_ctrl_block *dcb)
     return 0;
 }
 
-struct device_ctrl_block *dev_alloc(void)
+struct device_ctrl_block *dcb_alloc(void)
 {
     return(struct device_ctrl_block *)malloc(sizeof(struct device_ctrl_block));
 }
 
-void dev_free(struct device_ctrl_block *dcb)
+void dcb_free(struct device_ctrl_block *dcb)
 {
     free(dcb);
 }
