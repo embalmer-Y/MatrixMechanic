@@ -35,6 +35,7 @@ enum ability_state {
 struct ability_ops {
     int (*init)(int argc, void *argv[]);
     int (*deinit)(void);
+    int (*ctrl)(int argc, void *argv[]);
     int (*read)(int argc, void *argv[]);
     int (*write)(int argc, void *argv[]);
     int (*callback)(int argc, void *argv[]);
@@ -76,10 +77,20 @@ struct ability_thread_ctrl_block {
     uint16_t count;
 };
 
+struct ability_dependency {
+    struct ability_dependency *next;
+    struct ability_dependency *prev;
+    struct ability *ability;
+
+    uint8_t is_private;
+};
+
 struct ability {
     struct ability *next;
     struct ability *prev;
-    struct ability *dependencies;
+    
+    struct ability_dependency *prv;
+    struct ability_dependency *chd;
 
     uint16_t id;
     char name[MAX_ABILITY_NAME_LENGTH];
