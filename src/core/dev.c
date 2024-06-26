@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dev.h"
 #include "common.h"
@@ -38,16 +39,13 @@ void acb_free(struct ability_ctrl_block *acb)
     free(acb);
 }
 
-int device_init(struct device *dev)
+int device_get_id(struct device_ctrl_block *dcb)
 {
-    // TODO: Initialize main device
+    if (dcb == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
 
-    return DEVICE_ERR_NONE;
-}
-
-int device_deinit(struct device *dev)
-{
-    // TODO: Deinitialize main device
+    // TODO: Get device ID
 
     return DEVICE_ERR_NONE;
 }
@@ -60,6 +58,53 @@ struct device *device_alloc(void)
 void device_free(struct device *dev)
 {
     free(dev);
+}
+
+
+int device_init(struct device *dev, uint16_t id, const char *name)
+{
+    int ret;
+    if (dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    dev->next = NULL;
+    dev->prev = NULL;
+    dev->id = id;
+    strcpy(dev->name, name);
+
+    dev->acb = acb_alloc();
+    if (dev->acb == NULL) {
+        return -DEVICE_ERR_NO_MEMORY;
+    }
+
+    ret = ability_acb_init(dev->acb);
+    if (ret != DEVICE_ERR_NONE) {
+        acb_free(dev->acb);
+        return ret;
+    }
+
+    return DEVICE_ERR_NONE;
+}
+
+int device_deinit(struct device *dev)
+{
+    int ret;
+    if (dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ret = ability_acb_deinit(dev->acb);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    acb_free(dev->acb);
+    dev->acb = NULL;
+
+    device_free(dev);
+
+    return DEVICE_ERR_NONE;
 }
 
 int device_dcb_init(struct device_ctrl_block *dcb)
