@@ -10,6 +10,21 @@
 #define MAX_ABILITY_NAME_LENGTH 128
 #define MAX_DEVICE_NAME_LENGTH 128
 
+#define SECTION(x) __attribute__((used, section("module_init" #x)))
+typedef int (*module_init_t)(void);
+
+#define MODULE_INIT(func, type) \
+    const module_init_t __module_init_##func SECTION(type) = func
+#define ABILITY_INIT(func) MODULE_INIT(func, "_ability")
+#define DEVICE_INIT(func) MODULE_INIT(func, "_device")
+
+#ifdef __GNUC__
+extern module_init_t __start_module_init_ability;
+extern module_init_t __stop_module_init_ability;
+extern module_init_t __start_module_init_device;
+extern module_init_t __stop_module_init_device;
+#endif /* __GNUC__ */
+
 enum device_errno {
     DEVICE_ERR_NONE = 0,
     DEVICE_ERR_PARAMETER,
