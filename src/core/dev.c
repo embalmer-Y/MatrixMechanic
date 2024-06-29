@@ -39,15 +39,24 @@ void acb_free(struct ability_ctrl_block *acb)
     free(acb);
 }
 
-int device_get_id(struct device_ctrl_block *dcb)
+int device_get_id(struct device_ctrl_block *dcb, uint16_t *id, const char *name)
 {
-    if (dcb == NULL) {
+    struct device *dev;
+    
+    if (dcb == NULL || id == NULL || name == NULL) {
         return -DEVICE_ERR_PARAMETER;
     }
 
-    // TODO: Get device ID
+    dev = dcb->head;
+    while (dev->next) {
+        if (strcmp(dev->name, name) == 0) {
+            *id = dev->id;
+            return DEVICE_ERR_NONE;
+        }
+        dev = dev->next;
+    }
 
-    return DEVICE_ERR_NONE;
+    return -DEVICE_ERR_NOT_FOUND;
 }
 
 struct device *device_alloc(void)
