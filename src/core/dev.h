@@ -11,7 +11,7 @@
 #define MAX_DEVICE_NAME_LENGTH 128
 
 #define SECTION(x) __attribute__((used, section("module_init" #x)))
-typedef int (*module_init_t)(void);
+typedef int (*module_init_t)(void *block);
 
 #define MODULE_INIT(func, type) \
     const module_init_t __module_init_##func SECTION(type) = func

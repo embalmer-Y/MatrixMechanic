@@ -116,6 +116,40 @@ int device_deinit(struct device *dev)
     return DEVICE_ERR_NONE;
 }
 
+struct device *device_alloc(void)
+{
+    return(struct device *)malloc(sizeof(struct device));
+}
+
+void device_free(struct device *dev)
+{
+    free(dev);
+}
+
+int device_register(struct device_ctrl_block *dcb, struct device *dev, module_init_t *func)
+{
+    int ret;
+    if (dcb == NULL || dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ret = (*func)(dev);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    if (dcb->head == NULL) {
+        dcb->head = dev;
+    } else {
+        dcb->tail->next = dev;
+        dev->prev = dcb->tail;
+        dcb->tail = dev;
+    }
+    dcb->count++;
+
+    return DEVICE_ERR_NONE;
+}
+
 int device_dcb_init(struct device_ctrl_block *dcb)
 {
     if (dcb == NULL) {
