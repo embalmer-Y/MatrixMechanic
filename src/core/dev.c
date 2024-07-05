@@ -5,15 +5,151 @@
 #include "dev.h"
 #include "common.h"
 
+struct ability *ability_alloc(void)
+{
+    return(struct ability *)malloc(sizeof(struct ability));
+}
+
+void ability_free(struct ability *ability)
+{
+    free(ability);
+}
+
+int ability_init(struct ability_ctrl_block *acb, struct ability *ability, uint16_t id, const char *name)
+{
+    if (ability == NULL || name == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ability->id = id;
+    strcpy(ability->name, name);
+
+    if (acb->count == 0) {
+        acb->head = ability;
+    } else {
+        acb->tail->next = ability;
+        ability->prev = acb->tail;
+    }
+    acb->tail = ability;
+    acb->count++;
+
+    return DEVICE_ERR_NONE;
+}
+
+int ability_deinit(struct ability_ctrl_block *acb, struct ability *ability)
+{
+    if (acb == NULL || ability == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    if (ability->prev) {
+        ability->prev->next = ability->next;
+    } else {
+        acb->head = ability->next;
+    }
+    if (ability->next) {
+        ability->next->prev = ability->prev;
+    } else {
+        acb->tail = ability->prev;
+    }
+    acb->count--;
+
+    return DEVICE_ERR_NONE;
+}
+
+int ability_add(struct ability_ctrl_block *acb, struct ability *ability)
+{
+    if (acb == NULL || ability == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    if (acb->head == NULL) {
+        acb->head = ability;
+    } else {
+        acb->tail->next = ability;
+        ability->prev = acb->tail;
+        acb->tail = ability;
+    }
+    acb->count++;
+
+    return DEVICE_ERR_NONE;
+}
+
+int ability_remove(struct ability_ctrl_block *acb, struct ability *ability)
+{
+    if (acb == NULL || ability == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    if (ability->prev) {
+        ability->prev->next = ability->next;
+    } else {
+        acb->head = ability->next;
+    }
+    if (ability->next) {
+        ability->next->prev = ability->prev;
+    } else {
+        acb->tail = ability->prev;
+    }
+    acb->count--;
+
+    return DEVICE_ERR_NONE;
+}
+
+int ability_register(struct ability_ctrl_block *acb, struct ability *ability, module_init_t *func)
+{
+    int ret;
+
+    if (acb == NULL || ability == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ret = (*func)(ability);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    ret = ability_add(acb, ability);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    return DEVICE_ERR_NONE;
+}
+
+int ability_unregister(struct ability_ctrl_block *acb, struct ability *ability)
+{
+    int ret;
+
+    if (acb == NULL || ability == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ret = ability_remove(acb, ability);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    return DEVICE_ERR_NONE;
+}
+
 int ability_acb_init(struct ability_ctrl_block *acb)
 {
+    int ret;
     if (acb == NULL) {
         return -DEVICE_ERR_PARAMETER;
     }
 
     acb->count = 0;
 
-    // TODO: Initialize ability
+    for (module_init_t *init_func = __start_module_init_ability;
+        init_func != __stop_module_init_ability;
+        init_func++) {
+        ret = ability_register(acb, NULL, *init_func);
+        if (ret != DEVICE_ERR_NONE) {
+            return ret;
+        }
+    }
 
     return DEVICE_ERR_NONE;
 }
@@ -24,7 +160,11 @@ int ability_acb_deinit(struct ability_ctrl_block *acb)
         return -DEVICE_ERR_PARAMETER;
     }
 
-    // TODO: Deinitialize ability
+    while (acb->count > 0)
+    {
+        struct ability *ability = acb->head;
+        ability_deinit(acb, ability);
+    }
 
     return DEVICE_ERR_NONE;
 }
@@ -68,7 +208,6 @@ void device_free(struct device *dev)
 {
     free(dev);
 }
-
 
 int device_init(struct device *dev, uint16_t id, const char *name)
 {
@@ -126,16 +265,10 @@ void device_free(struct device *dev)
     free(dev);
 }
 
-int device_register(struct device_ctrl_block *dcb, struct device *dev, module_init_t *func)
+int device_add(struct device_ctrl_block *dcb, struct device *dev)
 {
-    int ret;
     if (dcb == NULL || dev == NULL) {
         return -DEVICE_ERR_PARAMETER;
-    }
-
-    ret = (*func)(dev);
-    if (ret != DEVICE_ERR_NONE) {
-        return ret;
     }
 
     if (dcb->head == NULL) {
@@ -150,15 +283,91 @@ int device_register(struct device_ctrl_block *dcb, struct device *dev, module_in
     return DEVICE_ERR_NONE;
 }
 
+
+int device_remove(struct device_ctrl_block *dcb, struct device *dev)
+{
+    if (dcb == NULL || dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    if (dev->prev) {
+        dev->prev->next = dev->next;
+    } else {
+        dcb->head = dev->next;
+    }
+    if (dev->next) {
+        dev->next->prev = dev->prev;
+    } else {
+        dcb->tail = dev->prev;
+    }
+    dcb->count--;
+
+    return DEVICE_ERR_NONE;
+}
+
+int device_register(struct device_ctrl_block *dcb, struct device *dev, module_init_t *func)
+{
+    int ret;
+
+    if (dcb == NULL || dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    ret = (*func)(dev);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    ret = device_add(dcb, dev);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    return DEVICE_ERR_NONE;
+}
+
+int device_unregister(struct device_ctrl_block *dcb, struct device *dev)
+{
+    int ret;
+
+    if (dcb == NULL || dev == NULL) {
+        return -DEVICE_ERR_PARAMETER;
+    }
+
+    while (dev->acb->count > 0)
+    {
+        ret = ability_deinit(dev->acb, dev->acb->head);
+        if (ret != DEVICE_ERR_NONE)
+            return ret;
+    }
+    
+    ret = device_remove(dcb, dev);
+    if (ret != DEVICE_ERR_NONE) {
+        return ret;
+    }
+
+    return DEVICE_ERR_NONE;
+}
+
 int device_dcb_init(struct device_ctrl_block *dcb)
 {
+    int ret;
+    module_init_t *init_func;
+
     if (dcb == NULL) {
         return -DEVICE_ERR_PARAMETER;
     }
 
     dcb->count = 0;
 
-    // TODO: Initialize main device
+    for (init_func = __start_module_init_device;
+        init_func != __stop_module_init_device;
+        init_func++) {
+        ret = device_register(dcb, NULL, *init_func);
+        if (ret != DEVICE_ERR_NONE) {
+            return ret;
+        }
+    }
 
     return DEVICE_ERR_NONE;
 }
