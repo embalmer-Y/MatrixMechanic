@@ -30,6 +30,11 @@ enum device_errno {
     DEVICE_ERR_PARAMETER,
     DEVICE_ERR_NO_MEMORY,
     DEVICE_ERR_NOT_FOUND,
+    DEVICE_ERR_BUSY,
+    DEVICE_ERR_TIMEOUT,
+    DEVICE_ERR_IO,
+    DEVICE_ERR_NO_SUPPORT,
+    DEVICE_ERR_UNKNOWN,
 };
 
 enum ability_type {
@@ -45,6 +50,11 @@ enum ability_state {
     ABILITY_STATE_STOP,
     ABILITY_STATE_PAUSE,
     ABILITY_STATE_ERROR
+};
+
+enum ability_dep_type {
+    ABILITY_DEP_TYPE_NORMAL,
+    ABILITY_DEP_TYPE_PRIVATE,
 };
 
 struct ability_ops {
@@ -97,6 +107,13 @@ struct ability_dependency {
     struct ability_dependency *prev;
     struct ability *ability;
 
+    enum ability_dep_type type;
+};
+
+struct ability_dep_ctrl_block {
+    struct ability_dependency* head;
+    struct ability_dependency* tail;
+    uint16_t count;
     uint8_t is_private;
 };
 
@@ -104,8 +121,8 @@ struct ability {
     struct ability *next;
     struct ability *prev;
     
-    struct ability_dependency *prv;
-    struct ability_dependency *chd;
+    struct ability_dep_ctrl_block *prv;
+    struct ability_dep_ctrl_block *chd;
 
     uint16_t id;
     char name[MAX_ABILITY_NAME_LENGTH];

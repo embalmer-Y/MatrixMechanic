@@ -5,6 +5,40 @@
 #include "dev.h"
 #include "common.h"
 
+int ability_set_dependency(struct ability *self, struct ability *prv, enum ability_dep_type dep_type)
+{
+    struct ability_dependency *dep_node;
+
+    if (self == NULL || prv == NULL)
+        return -DEVICE_ERR_PARAMETER;
+
+    if (prv->chd->is_private) {
+        return -DEVICE_ERR_NO_SUPPORT;
+    }
+
+    dep_node = (struct ability_dependency *)malloc(sizeof(struct ability_dependency));
+    if (dep_node == NULL) {
+        return -DEVICE_ERR_NO_MEMORY;
+    }
+
+    if (self->prv->count == 0) {
+        self->prv->head = dep_node;
+        self->prv->tail = dep_node;
+    } else {
+
+        self->prv->tail->next = dep_node;
+        dep_node->prev = self->prv->tail;
+        self->prv->tail = dep_node;
+    }
+
+    dep_node->ability = prv;
+    dep_node->type = dep_type;
+
+    self->prv->count++;
+
+    return DEVICE_ERR_NONE;
+}
+
 int ability_get_id(struct ability_ctrl_block *acb, uint16_t *id, const char *name)
 {
     struct ability *ability;

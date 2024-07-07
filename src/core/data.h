@@ -94,6 +94,10 @@ struct msg_rx_srv {
     struct msg_queue *q;
     uint32_t id;
     enum msg_q_type type;
+
+    uint64_t rx_count;
+    uint64_t rx_bytes;
+    uint64_t rx_err_count;
 };
 
 struct msg_rx_srvs {
@@ -105,6 +109,10 @@ struct msg_tx_srv {
     struct msg_queue *q;
     uint32_t id;
     enum msg_q_type type;
+
+    uint64_t tx_count;
+    uint64_t tx_bytes;
+    uint64_t tx_err_count;
 };
 
 struct msg_tx_srvs {
@@ -116,6 +124,8 @@ struct msg_rx_raw_srv {
     struct msg_raw_queue *q;
     uint32_t id;
     enum msg_q_type type;
+
+    uint64_t rx_bytes;
 };
 
 struct msg_rx_raw_srvs {
@@ -127,6 +137,8 @@ struct msg_tx_raw_srv {
     struct msg_raw_queue *q;
     uint32_t id;
     enum msg_q_type type;
+
+    uint64_t tx_bytes;
 };
 
 struct msg_tx_raw_srvs {
