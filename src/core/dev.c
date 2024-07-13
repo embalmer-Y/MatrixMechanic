@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "dev.h"
-#include "common.h"
 
 int ability_set_dependency(struct ability *self, struct ability *prv, enum ability_dep_type dep_type)
 {
@@ -188,14 +187,14 @@ int ability_acb_init(struct ability_ctrl_block *acb)
 
     acb->count = 0;
 
-    for (module_init_t *init_func = __start_module_init_ability;
+    for (module_init_t init_func = __start_module_init_ability;
         init_func != __stop_module_init_ability;
         init_func++) {
         struct ability *ability = ability_alloc();
         if (ability == NULL)
             return -DEVICE_ERR_NO_MEMORY;
 
-        ret = ability_register(acb, NULL, *init_func);
+        ret = ability_register(acb, NULL, &init_func);
         if (ret != DEVICE_ERR_NONE) {
             ability_free(ability);
             return ret;
@@ -382,7 +381,7 @@ int device_unregister(struct device_ctrl_block *dcb, struct device *dev)
 int device_dcb_init(struct device_ctrl_block *dcb)
 {
     int ret;
-    module_init_t *init_func;
+    module_init_t init_func;
 
     if (dcb == NULL) {
         return -DEVICE_ERR_PARAMETER;
@@ -397,7 +396,7 @@ int device_dcb_init(struct device_ctrl_block *dcb)
         if (dev == NULL)
             return -DEVICE_ERR_NO_MEMORY;
 
-        ret = device_register(dcb, dev, *init_func);
+        ret = device_register(dcb, dev, &init_func);
         if (ret != DEVICE_ERR_NONE) {
             device_free(dev);
             return ret;
