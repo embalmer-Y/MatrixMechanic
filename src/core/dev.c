@@ -302,16 +302,6 @@ int device_deinit(struct device *dev)
     return DEVICE_ERR_NONE;
 }
 
-struct device *device_alloc(void)
-{
-    return(struct device *)malloc(sizeof(struct device));
-}
-
-void device_free(struct device *dev)
-{
-    free(dev);
-}
-
 int device_add(struct device_ctrl_block *dcb, struct device *dev)
 {
     if (dcb == NULL || dev == NULL)
